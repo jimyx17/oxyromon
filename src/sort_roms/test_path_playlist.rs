@@ -17,6 +17,7 @@ async fn test() {
         sorting: Sorting::AllRegions as i64,
         complete: false,
         system_id: 1,
+        datsource_id: 1,
         parent_id: None,
         bios_id: None,
         playlist_id: None,

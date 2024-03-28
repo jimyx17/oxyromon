@@ -326,11 +326,12 @@ pub async fn create_game_from_xml(
     system_id: i64,
     parent_id: Option<i64>,
     bios_id: Option<i64>,
+    datsource_id: Option<i64>,
 ) -> i64 {
     sqlx::query!(
         "
-        INSERT INTO games (name, description, comment, device, bios, regions, system_id, parent_id, bios_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO games (name, description, comment, device, bios, regions, system_id, parent_id, bios_id, datsource_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ",
         game_xml.name,
         game_xml.description,
@@ -341,6 +342,7 @@ pub async fn create_game_from_xml(
         system_id,
         parent_id,
         bios_id,
+        datsource_id
     )
     .execute(connection)
     .await
@@ -356,11 +358,12 @@ pub async fn update_game_from_xml(
     system_id: i64,
     parent_id: Option<i64>,
     bios_id: Option<i64>,
+    datsource_id: Option<i64>,
 ) {
     sqlx::query!(
         "
         UPDATE games
-        SET name = ?, description = ?, comment = ?, device = ?, bios = ?, regions = ?, system_id = ?, parent_id = ?, bios_id = ?
+        SET name = ?, description = ?, comment = ?, device = ?, bios = ?, regions = ?, system_id = ?, parent_id = ?, bios_id = ?, datsource_id = ?
         WHERE id = ?
         ",
         game_xml.name,
@@ -372,6 +375,7 @@ pub async fn update_game_from_xml(
         system_id,
         parent_id,
         bios_id,
+        datsource_id,
         id,
     )
     .execute(connection)
@@ -725,6 +729,45 @@ pub async fn find_wanted_games_by_system_id(
     .unwrap_or_else(|_| panic!("Error while finding games with system id {}", system_id))
 }
 
+pub async fn find_games_by_datsource_id(
+    connection: &mut SqliteConnection,
+    datsource_id: i64,
+) -> Vec<Game> {
+    sqlx::query_as!(
+        Game,
+        "
+        SELECT *
+        FROM games
+        WHERE datsource_id = ?
+        ORDER BY name
+        ",
+        datsource_id,
+    )
+    .fetch_all(connection)
+    .await
+    .unwrap_or_else(|_| panic!("Error while finding games with datsource id {}", datsource_id))
+}
+
+pub async fn find_wanted_games_by_datsource_id(
+    connection: &mut SqliteConnection,
+    datsource_id: i64,
+) -> Vec<Game> {
+    sqlx::query_as!(
+        Game,
+        "
+        SELECT *
+        FROM games
+        WHERE datsource_id = ?
+        AND sorting != 2 
+        ORDER BY name
+        ",
+        datsource_id,
+    )
+    .fetch_all(connection)
+    .await
+    .unwrap_or_else(|_| panic!("Error while finding games with datsource id {}", datsource_id))
+}
+
 #[cfg(test)]
 pub async fn find_games_by_ids(connection: &mut SqliteConnection, ids: &[i64]) -> Vec<Game> {
     let sql = format!(
@@ -964,6 +1007,25 @@ pub async fn create_rom_from_xml(
     .execute(connection)
     .await
     .unwrap_or_else(|_| panic!("Error while creating rom with name {}", rom_xml.name))
+    .last_insert_rowid()
+}
+
+pub async fn create_datsource(
+    connection: &mut SqliteConnection,
+    name: &str,
+    webpage: &str,
+) -> i64 {
+    sqlx::query!(
+        "
+        INSERT INTO datsource (name, webpage)
+        VALUES (?, ?)
+        ",
+        name,
+        webpage
+    )
+        .execute(connection)
+        .await
+    .unwrap_or_else(|_| panic!("Error while creating datsource with name {}", name))
     .last_insert_rowid()
 }
 

@@ -304,6 +304,7 @@ async fn create_or_update_games(
     connection: &mut SqliteConnection,
     games_xml: &[GameXml],
     system_id: i64,
+    datsource_id: i64,
     arcade: bool,
     progress_bar: &ProgressBar,
 ) -> SimpleResult<Vec<i64>> {
@@ -333,13 +334,29 @@ async fn create_or_update_games(
         let game_id = match game {
             Some(game) => {
                 update_game_from_xml(
-                    connection, game.id, game_xml, &regions, system_id, None, None,
+                    connection,
+                    game.id,
+                    game_xml,
+                    &regions,
+                    system_id,
+                    None,
+                    None,
+                    datsource_id,
                 )
                 .await;
                 game.id
             }
             None => {
-                create_game_from_xml(connection, game_xml, &regions, system_id, None, None).await
+                create_game_from_xml(
+                    connection,
+                    game_xml,
+                    &regions,
+                    system_id,
+                    None,
+                    None,
+                    datsource_id,
+                )
+                .await
             }
         };
         if !game_xml.roms.is_empty() {

@@ -75,6 +75,15 @@ pub struct Game {
     pub parent_id: Option<i64>,
     pub bios_id: Option<i64>,
     pub playlist_id: Option<i64>,
+    pub datsource_id: i64,
+}
+
+#[derive(FromRow)]
+#[cfg_attr(feature = "server", derive(Clone, SimpleObject))]
+pub struct DatSource {
+    pub id: i64,
+    pub name: String,
+    pub webpage: String,
 }
 
 #[derive(FromRow)]
